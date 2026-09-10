@@ -1,6 +1,6 @@
 # Breakroom local delivery
 
-The repository now includes real email/password accounts, private customer workspaces, guided agent setup, a visual 24-drill suite builder, evidence-based insights and invitations, alongside the local engine and optional test-only billing. Source repository: [prakharsingh1/breakroom](https://github.com/prakharsingh1/breakroom). See [STATUS.md](STATUS.md) for the current publication and validation state. The GitHub repository is public source; no public application server has been deployed.
+The repository now includes real email/password accounts, private customer workspaces, guided agent setup, a visual 24-drill suite builder, evidence-based insights and invitations, alongside the local engine and optional test-only billing. Source repository: [prakharsingh1/breakroom](https://github.com/prakharsingh1/breakroom). See [STATUS.md](STATUS.md) for the current publication and validation state. The public GitHub repository has been created, but source transfer is currently blocked by TLS/connection failures; it remains empty. The implementation is committed locally. No public application server has been deployed.
 
 ## Start the application
 
@@ -83,7 +83,7 @@ On the verified Mac the matching Chromium download timed out. The tested install
 export BREAKROOM_BROWSER_EXECUTABLE="$HOME/Library/Caches/ms-playwright/chromium-1234/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing"
 ```
 
-The current Python gate passes 307 tests, including 85 account/workspace/tenant checks. The current customer gate passed 14 browser tests in 2.7 minutes, with 53 accessibility scans reporting zero violations. Manual-review items and the exact scope are recorded in STATUS.md. Browser automation uses a separate request budget because it sends hundreds of requests through one local proxy; normal runtime limits and password-abuse budgets are unchanged. The separate mutation matrix executed 477 fresh trials: 216 corrected passes and 261 expected negative detections, with no missed or incomplete detections. Real backup/restore, CLI HTTP upload and downloaded regression execution also passed. Exact timings and evidence are in [STATUS.md](STATUS.md). Upstream HTTPX/Starlette/Authlib deprecation warnings remain. The prepared CI has not run remotely.
+The current Python gate passes 307 tests, including 85 account/workspace/tenant checks. The current customer gate passed 14 browser tests in 2.7 minutes, with 53 accessibility scans reporting zero violations. Manual-review items and the exact scope are recorded in STATUS.md. Browser automation uses a separate request budget because it sends hundreds of requests through one local proxy; normal runtime limits and password-abuse budgets are unchanged. The separate mutation matrix executed 477 fresh trials: 216 corrected passes and 261 expected negative detections, with no missed or incomplete detections. Real backup/restore, CLI HTTP upload and downloaded regression execution also passed. Exact timings and evidence are in [STATUS.md](STATUS.md). Upstream HTTPX/Starlette/Authlib deprecation warnings remain. The prepared CI has not run remotely because source transfer has not succeeded; see the publication handoff in STATUS.md.
 
 ## Evidence and source map
 

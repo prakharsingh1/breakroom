@@ -1,0 +1,43 @@
+# INACTIVE EXAMPLE. The owner must review and explicitly install this workflow.
+# Before dispatch, place a previously reviewed prepared JSON at:
+#   $BREAKROOM_WORKER_ROOT/reviewed/<canonical upload SHA-256>.json
+# Provision a trusted Breakroom installation at $BREAKROOM_WORKER_ROOT/venv.
+# No checkout, no adapter execution, no report generation and no schedule.
+name: Explicitly upload a previously reviewed Breakroom report
+
+on:
+  workflow_dispatch:
+    inputs:
+      reviewed_sha256:
+        description: Canonical SHA-256 printed by prepare-upload for the file you reviewed
+        required: true
+        type: string
+
+permissions: {}
+
+jobs:
+  upload-reviewed:
+    runs-on: [self-hosted, breakroom-customer-worker]
+    timeout-minutes: 2
+    environment: breakroom-report-upload
+    steps:
+      - name: Verify reviewed checksum and explicitly upload
+        shell: bash
+        env:
+          BREAKROOM_WORKER_ROOT: ${{ vars.BREAKROOM_WORKER_ROOT }}
+          BREAKROOM_TEAM_ORIGIN: ${{ vars.BREAKROOM_TEAM_ORIGIN }}
+          BREAKROOM_PROJECT_ID: ${{ vars.BREAKROOM_PROJECT_ID }}
+          BREAKROOM_API_TOKEN: ${{ secrets.BREAKROOM_REPORTS_WRITE_KEY }}
+          REVIEWED_SHA256: ${{ inputs.reviewed_sha256 }}
+        run: |
+          set -euo pipefail
+          [[ "$REVIEWED_SHA256" =~ ^[0-9a-f]{64}$ ]]
+          : "${BREAKROOM_WORKER_ROOT:?Owner-managed worker root required}"
+          : "${BREAKROOM_TEAM_ORIGIN:?Owner-configured HTTPS origin required}"
+          : "${BREAKROOM_PROJECT_ID:?Owner-configured project required}"
+          "$BREAKROOM_WORKER_ROOT/venv/bin/python" -m breakroom upload-report \
+            "$BREAKROOM_WORKER_ROOT/reviewed/$REVIEWED_SHA256.json" \
+            --expected-sha256 "$REVIEWED_SHA256" \
+            --server "$BREAKROOM_TEAM_ORIGIN" \
+            --project "$BREAKROOM_PROJECT_ID" \
+            --token-env BREAKROOM_API_TOKEN

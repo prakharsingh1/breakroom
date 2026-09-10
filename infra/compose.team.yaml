@@ -1,0 +1,65 @@
+# Explicit local team development overlay. Never use this development identity
+# configuration or database password for a public deployment.
+services:
+  postgres:
+    image: postgres:18.6-bookworm
+    environment:
+      POSTGRES_DB: breakroom
+      POSTGRES_USER: breakroom
+      POSTGRES_PASSWORD: breakroom-local-development-only
+    ports:
+      - 127.0.0.1:54329:5432
+    volumes:
+      - team-postgres:/var/lib/postgresql
+    networks: [team, local-db]
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U breakroom -d breakroom]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    mem_limit: 512m
+    pids_limit: 128
+  web:
+    build:
+      args:
+        BREAKROOM_TEAM_API_ORIGIN: http://team-api:8001
+    environment:
+      BREAKROOM_TEAM_API_ORIGIN: http://team-api:8001
+      BREAKROOM_TEAM_LOCAL_PROXY_SECRET: breakroom-local-proxy-development-only
+    networks: [demo, frontend, team]
+    depends_on:
+      team-api:
+        condition: service_healthy
+  team-api:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.team
+    environment:
+      BREAKROOM_TEAM_DATABASE_URL: postgresql+psycopg://breakroom:breakroom-local-development-only@postgres:5432/breakroom
+      BREAKROOM_TEAM_ENV: development
+      BREAKROOM_TEAM_DEV_LOGIN: '1'
+      BREAKROOM_TEAM_PUBLIC_ORIGIN: http://127.0.0.1:3000
+      BREAKROOM_TEAM_LOCAL_PROXY_SECRET: breakroom-local-proxy-development-only
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [team]
+    read_only: true
+    tmpfs:
+      - /tmp:rw,nosuid,noexec,size=32m
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 64
+    mem_limit: 384m
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/api/team/health', timeout=2)"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 15s
+networks:
+  team:
+    internal: true
+  local-db: {}
+volumes:
+  team-postgres:

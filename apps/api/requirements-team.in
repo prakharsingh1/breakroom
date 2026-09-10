@@ -1,0 +1,5 @@
+-r requirements.lock
+SQLAlchemy==2.0.52
+psycopg[binary]==3.3.5
+Authlib==1.8.0
+argon2-cffi==25.1.0

@@ -1,0 +1,43 @@
+name: breakroom-local
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.api
+    read_only: true
+    tmpfs:
+      - /tmp:rw,nosuid,noexec,size=64m
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 64
+    mem_limit: 256m
+    cpus: 1
+    networks: [demo]
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+  web:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.web
+      args:
+        BREAKROOM_API_ORIGIN: http://api:8000
+    environment:
+      BREAKROOM_API_ORIGIN: http://api:8000
+    ports:
+      - 127.0.0.1:3000:3000
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: [demo, frontend]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 768m
+networks:
+  demo:
+    internal: true
+  frontend: {}

@@ -1,0 +1,7 @@
+# Browser automation performs hundreds of operations from one proxy peer.
+# Keep normal development/production limits unchanged. Password attempt budgets
+# are separate and remain enforced. Boundary tests validate request throttling.
+services:
+  team-api:
+    environment:
+      BREAKROOM_TEAM_RATE_LIMIT: '1000'

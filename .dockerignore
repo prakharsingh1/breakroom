@@ -1,0 +1,10 @@
+.venv*
+venv
+venv-team
+**/node_modules
+**/.next
+**/__pycache__
+artifacts
+output
+.git
+**/.env*

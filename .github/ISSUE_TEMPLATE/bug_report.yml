@@ -1,0 +1,34 @@
+name: Reproducible bug
+description: Report a simulator, evaluator, runner, artifact, or interface problem.
+title: '[Bug] '
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: 'Use synthetic data. Do not include credentials, production customer records, or private customer code. Follow SECURITY.md for security-sensitive reports.'
+  - type: input
+    id: version
+    attributes:
+      label: Breakroom and runtime versions
+      placeholder: 'Core 0.1.0, Python 3.12.14, macOS/Linux; case and oracle version if applicable'
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Minimal local reproduction
+      description: 'Include exact commands and the smallest synthetic adapter/manifest change needed.'
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected business effects and actual evidence
+      description: 'Distinguish execution status, committed records, claims, fault coverage, and verdict. Explain why a check is wrong; a failing negative control may be expected.'
+    validations:
+      required: true
+  - type: textarea
+    id: artifacts
+    attributes:
+      label: Safe evidence and limitations
+      description: 'Paste bounded relevant synthetic report fields. State omitted information and whether the result is repeatable. Do not attach arbitrary executables.'

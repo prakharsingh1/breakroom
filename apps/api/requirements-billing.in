@@ -1,0 +1,2 @@
+-r requirements-team.lock
+stripe==15.6.1

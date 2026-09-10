@@ -1,0 +1,6 @@
+import Link from 'next/link';
+import Demo from '@/components/Demo';
+export const metadata = { title: 'The Missing Response — Breakroom' };
+export default function DemoPage() {
+  return <div className="wrap product-page"><nav className="product-nav" aria-label="Product navigation"><Link href="/fire-drills">Fire Drills</Link><Link href="/runs">Runs</Link><Link href="/compare">Compare</Link></nav><div className="demo-heading"><span className="eyebrow">FIRE DRILL 02 / LIVE BUILT-IN DEMO</span><h1>The Missing Response<span>.</span></h1><p>The refund succeeded. The response disappeared.<br />Will your agent refund twice?</p><p className="scope-label">Simulated order: INR 5,000 · Authorized refund: INR 1,000 · Scripted reference agents</p></div><Demo /><div className="demo-followup"><div><span className="eyebrow">THE EXPERIMENT</span><p>Run the faulty reference. Inspect its committed refunds. Then select the corrected reference and execute the same drill. Compare the evidence and export a runnable test.</p></div><div><span className="eyebrow">THE BOUNDARY</span><p>No commercial models are benchmarked here. TestPay and TestDesk are original fake services. This demo changes simulated records only.</p><Link href="/fire-drills/refund-response-lost" className="text-link">Read the exact drill contract →</Link></div></div></div>;
+}

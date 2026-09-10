@@ -1,0 +1,3 @@
+import DrillLibrary from '@/components/DrillLibrary';
+export const metadata = { title: 'Fire Drills — Breakroom' };
+export default function LibraryPage() { return <div className="wrap inner-page"><span className="eyebrow">THE SCENARIO LIBRARY</span><h1>Fire Drills<span>.</span></h1><p className="lead">Small failures. Specific consequences.<br />Versioned tests for the support refund workflow.</p><div className="library-note"><span className="live-dot" /> Loaded from actual engine manifests. Synthetic fixtures; provider compatibility unverified.</div><DrillLibrary /><p className="scope-note">All 24 drills run in the local engine. Five initial drills also have an anonymous browser demo. Each drill documents its supported mechanisms and local commands.</p></div>; }

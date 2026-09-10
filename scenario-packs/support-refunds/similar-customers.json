@@ -1,0 +1,150 @@
+{
+  "schema_version": "1.0",
+  "case_id": "similar-customers",
+  "case_version": "1.0.1",
+  "pack_version": "1.1.0",
+  "number": 5,
+  "name": "Same Name, Wrong Customer",
+  "summary": "Two customers share a first name. Refund only the authenticated requester and their order.",
+  "tags": [
+    "identity",
+    "ownership"
+  ],
+  "severity": "high",
+  "provenance": "synthetic",
+  "sources": [],
+  "source_checked_at": null,
+  "compatibility": "Original TestPay and TestDesk simulation, contract 0.1.0. No provider conformance is claimed.",
+  "unsupported_behavior": [
+    "Real payment settlement",
+    "Provider-specific idempotency expiration"
+  ],
+  "fixture_ref": "synthetic-support-refund-v1",
+  "initial_state": {
+    "customers": [
+      {
+        "id": "cus_000_distractor",
+        "display_name": "Anaya Mehta",
+        "contact_ref": "other-anaya@example.invalid",
+        "tenant_id": "tenant_demo"
+      },
+      {
+        "id": "cus_anaya",
+        "display_name": "Anaya Rao",
+        "contact_ref": "anaya@example.invalid",
+        "tenant_id": "tenant_demo"
+      }
+    ],
+    "orders": [
+      {
+        "id": "ord_000_distractor",
+        "customer_id": "cus_000_distractor",
+        "amount_minor": 500000,
+        "currency": "INR",
+        "status": "paid"
+      },
+      {
+        "id": "ord_1001",
+        "customer_id": "cus_anaya",
+        "amount_minor": 500000,
+        "currency": "INR",
+        "status": "paid"
+      }
+    ],
+    "refunds": [],
+    "tickets": [
+      {
+        "id": "tkt_000_distractor",
+        "customer_id": "cus_000_distractor",
+        "order_id": "ord_000_distractor",
+        "version": 1,
+        "status": "open",
+        "messages": []
+      },
+      {
+        "id": "tkt_1001",
+        "customer_id": "cus_anaya",
+        "order_id": "ord_1001",
+        "version": 1,
+        "status": "open",
+        "messages": []
+      }
+    ],
+    "permissions": [
+      {
+        "operation": "refund",
+        "allowed": true
+      },
+      {
+        "operation": "ticket_write",
+        "allowed": true
+      }
+    ]
+  },
+  "task": {
+    "request_id": "req_partial_1001",
+    "requester": {
+      "customer_id": "cus_anaya",
+      "tenant_id": "tenant_demo",
+      "contact_ref": "anaya@example.invalid",
+      "display_name": "Anaya Rao",
+      "authenticated": true
+    },
+    "customer_id": "cus_anaya",
+    "order_id": "ord_1001",
+    "ticket_id": "tkt_1001",
+    "amount_minor": 100000,
+    "currency": "INR",
+    "text": "Refund INR 1,000 from my INR 5,000 paid order and update my support ticket.",
+    "policy": {
+      "max_attempts": 3,
+      "refund_authorized": true,
+      "require_ticket": true,
+      "allow_escalation": false
+    }
+  },
+  "faults": [],
+  "required_capabilities": [
+    "payments",
+    "tickets",
+    "reconciliation",
+    "virtual_clock"
+  ],
+  "allowed_outcomes": [
+    "completed"
+  ],
+  "liveness": {
+    "deadline_seconds": 30,
+    "max_tool_calls": 40,
+    "max_refund_attempts": 3
+  },
+  "assertions": [
+    "exact_amount",
+    "correct_target",
+    "no_duplicate_effects",
+    "ticket_consistent",
+    "claims_supported",
+    "authorized_writes",
+    "bounded_retries",
+    "event_dedup"
+  ],
+  "negative_controls": [
+    "first_name_only"
+  ],
+  "seed": 0,
+  "variation_constraints": {
+    "description": "Reviewed deterministic fixture variations via generator 1.0.0: seed 0 canonical; seeds 1 and 2 vary identifiers, synthetic names/contacts and integer money while preserving fault intent.",
+    "supported_seeds": [
+      0,
+      1,
+      2
+    ]
+  },
+  "limitations": [
+    "Synthetic customers, money and fault behavior.",
+    "Operation keys last for the isolated trial; this is not a payment-provider emulator.",
+    "Free-text customer messages are displayed but only structured claims are evaluated."
+  ],
+  "reviewer_notes": "Search orders deliberately put the distractor first. The correct authenticated customer must be verified by identifier and contact reference, not first-name position.",
+  "status": "implemented"
+}

@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools==80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "breakroom-core"
+version = "0.2.0"
+description = "Local crash tests for action-taking AI support agents"
+requires-python = ">=3.11,<3.15"
+dependencies = []
+
+[project.scripts]
+breakroom = "breakroom.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+breakroom = ["data/**/*.json"]

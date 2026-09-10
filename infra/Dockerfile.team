@@ -1,0 +1,11 @@
+FROM python:3.12.14-slim
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_DISABLE_PIP_VERSION_CHECK=1
+WORKDIR /app
+COPY apps/api/requirements-billing.lock /app/apps/api/requirements-billing.lock
+RUN python -m pip install --no-cache-dir -r /app/apps/api/requirements-billing.lock
+COPY packages/breakroom-core /app/packages/breakroom-core
+RUN python -m pip install --no-cache-dir /app/packages/breakroom-core
+COPY apps/api/breakroom_api /app/apps/api/breakroom_api
+USER 65532:65532
+EXPOSE 8001
+CMD ["python", "-m", "uvicorn", "breakroom_api.team:app", "--app-dir", "/app/apps/api", "--host", "0.0.0.0", "--port", "8001", "--workers", "1", "--no-proxy-headers", "--no-access-log", "--limit-concurrency", "32", "--timeout-keep-alive", "5"]

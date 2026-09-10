@@ -1,0 +1,114 @@
+name: Breakroom local release checks
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: breakroom-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      CI: 'true'
+      NEXT_TELEMETRY_DISABLED: '1'
+    services:
+      postgres:
+        image: postgres:18.6-bookworm
+        env:
+          POSTGRES_DB: breakroom
+          POSTGRES_USER: breakroom
+          POSTGRES_PASSWORD: breakroom-local-development-only
+        ports:
+          - 54329:5432
+        options: >-
+          --health-cmd "pg_isready -U breakroom -d breakroom"
+          --health-interval 5s --health-timeout 3s --health-retries 12
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - name: Install pinned local Python dependencies
+        run: |
+          python -m venv .venv-api
+          .venv-api/bin/python -m pip install -e ./packages/breakroom-core
+          .venv-api/bin/python -m pip install -r apps/api/requirements-billing.lock
+      - name: Basic source whitespace check
+        run: git diff-tree --check --root HEAD
+      - name: Core invariants and runner/artifact contracts
+        run: |
+          .venv-api/bin/python -m unittest discover -s tests/core -v
+          .venv-api/bin/python -m unittest discover -s tests/contract -v
+          .venv-api/bin/breakroom doctor
+          .venv-api/bin/breakroom demo --output artifacts/demo
+      - name: Executed mutation controls and repeated reviewed variations
+        run: .venv-api/bin/breakroom mutation-check --pack support-refunds --seed 0 --seed 1 --seed 2 --trials 3 --out artifacts/coverage
+      - name: API contract and isolation checks
+        env:
+          PYTHONPATH: apps/api
+        run: .venv-api/bin/python -m pytest tests/api -q
+      - name: PostgreSQL tenant and authentication checks
+        env:
+          PYTHONPATH: apps/api
+        run: .venv-api/bin/python -m unittest discover -s tests/team -v
+      - name: Test-only provider and subscription lifecycle checks
+        env:
+          PYTHONPATH: apps/api
+        run: .venv-api/bin/python -m unittest discover -s tests/billing -v
+      - name: Install pinned web dependencies
+        working-directory: apps/web
+        run: npm ci
+      - name: Typecheck and production build
+        working-directory: apps/web
+        run: |
+          npm run typecheck
+          npm run build
+      - name: Install the matching Chromium browser
+        working-directory: apps/web
+        run: npx playwright install --with-deps chromium
+      - name: Actual local demo browser smoke
+        working-directory: apps/web
+        run: BREAKROOM_TEST_PYTHON="$GITHUB_WORKSPACE/.venv-api/bin/python" npm run test:e2e
+      - name: Actual account and private workspace browser journeys
+        working-directory: apps/web
+        run: BREAKROOM_TEAM_E2E=1 BREAKROOM_TEST_PYTHON="$GITHUB_WORKSPACE/.venv-api/bin/python" npm run test:e2e -- team.spec.ts accounts.spec.ts customer-workspace.spec.ts
+
+  backup_restore:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - name: Install pinned local dependencies
+        run: |
+          python -m venv .venv-api
+          .venv-api/bin/python -m pip install -e ./packages/breakroom-core
+          .venv-api/bin/python -m pip install -r apps/api/requirements-billing.lock
+      - name: Start only disposable local PostgreSQL
+        run: docker compose -f infra/compose.yaml -f infra/compose.team.yaml up -d --wait postgres
+      - name: Verify backup scope guards and real restore
+        run: |
+          .venv-api/bin/python -m unittest discover -s tests/operations -v
+          .venv-api/bin/python scripts/backup-restore-smoke.py --out artifacts/operations/backup-restore.json
+      - name: Stop local database
+        if: always()
+        run: docker compose -f infra/compose.yaml -f infra/compose.team.yaml down

@@ -1,0 +1,73 @@
+# Standalone self-host configuration. Supply private values through --env-file.
+# The loopback web port must sit behind an HTTPS reverse proxy. No dev identity.
+name: breakroom-production
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.api
+    networks: [demo]
+    read_only: true
+    tmpfs: [/tmp:rw,nosuid,noexec,size=64m]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 256m
+    pids_limit: 64
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+  team-api:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.team
+    environment:
+      BREAKROOM_TEAM_ENV: production
+      BREAKROOM_TEAM_DEV_LOGIN: '0'
+      BREAKROOM_PASSWORD_ENABLED: '1'
+      BREAKROOM_TEAM_DATABASE_URL: ${BREAKROOM_TEAM_DATABASE_URL:?Set a private PostgreSQL connection URL}
+      BREAKROOM_TEAM_PUBLIC_ORIGIN: ${BREAKROOM_TEAM_PUBLIC_ORIGIN:?Set the exact public HTTPS origin}
+      BREAKROOM_SMTP_HOST: ${BREAKROOM_SMTP_HOST:?Set the TLS email server}
+      BREAKROOM_SMTP_FROM: ${BREAKROOM_SMTP_FROM:?Set a verified sender address}
+      BREAKROOM_SMTP_PORT: ${BREAKROOM_SMTP_PORT:-465}
+      BREAKROOM_SMTP_MODE: ${BREAKROOM_SMTP_MODE:-ssl}
+      BREAKROOM_SMTP_USERNAME: ${BREAKROOM_SMTP_USERNAME:-}
+      BREAKROOM_SMTP_PASSWORD: ${BREAKROOM_SMTP_PASSWORD:-}
+      BREAKROOM_BILLING_MODE: disabled
+    networks: [workspace, egress]
+    read_only: true
+    tmpfs: [/tmp:rw,nosuid,noexec,size=32m]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 512m
+    pids_limit: 64
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/api/team/health', timeout=2)"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+  web:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.web
+      args:
+        BREAKROOM_API_ORIGIN: http://api:8000
+        BREAKROOM_TEAM_API_ORIGIN: http://team-api:8001
+    ports: [127.0.0.1:3000:3000]
+    networks: [demo, workspace]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 768m
+    pids_limit: 128
+    depends_on:
+      api:
+        condition: service_healthy
+      team-api:
+        condition: service_healthy
+networks:
+  demo:
+    internal: true
+  workspace:
+    internal: true
+  egress: {}

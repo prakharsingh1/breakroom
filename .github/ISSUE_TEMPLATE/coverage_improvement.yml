@@ -1,0 +1,45 @@
+name: Fire Drill coverage improvement
+description: Propose a reproducible failure contract with source and rights information.
+title: '[Coverage] '
+body:
+  - type: markdown
+    attributes:
+      value: 'A useful case needs executed evidence, a valid synthetic world, and a clear scope. Private customer cases are not automatically eligible for the public library.'
+  - type: input
+    id: behavior
+    attributes:
+      label: Failure behavior and affected workflow
+    validations:
+      required: true
+  - type: textarea
+    id: contract
+    attributes:
+      label: Fixture, trigger, outcome checks, and permitted escalation
+      description: 'State the before/after-commit phase, amount and currency constraints, required capabilities, and liveness budget.'
+    validations:
+      required: true
+  - type: textarea
+    id: controls
+    attributes:
+      label: Executed faulty and corrected controls
+      description: 'Provide commands and observed assertions. A proposed control without execution is not reviewed coverage.'
+    validations:
+      required: true
+  - type: textarea
+    id: provenance
+    attributes:
+      label: Provenance, source date/version, and limitations
+      description: 'Choose synthetic, documented behavior, sandbox validated, or separately consented case. Link the exact source when applicable; do not infer provider conformance.'
+    validations:
+      required: true
+  - type: checkboxes
+    id: rights
+    attributes:
+      label: Data and contribution rights
+      options:
+        - label: 'The proposed fixture is synthetic or I have explicit rights and separate permission to contribute the supplied material.'
+          required: true
+        - label: 'This proposal contains no credentials, real customer identifiers, or private case data supplied without consent.'
+          required: true
+        - label: 'I have stated unsupported behavior and have not labeled generated examples as real-world incidents.'
+          required: true

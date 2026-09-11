@@ -213,3 +213,19 @@ class ControlPlane(unittest.TestCase):
         self.assertEqual(gate([{'verdict':'UNSUPPORTED'}],1,complete=True),'INCONCLUSIVE')
         self.assertEqual(gate([{'verdict':'FAIL'}],2,complete=False),'FAIL')
         self.assertEqual(gate([{'verdict':'PASS'}],1,complete=True),'PASS')
+
+    def test_disabled_account_mode_cancels_queued_execution(self):
+        from dataclasses import replace
+        self.key(); job=self.create_run(provider='openai',model='gpt-4.1-mini',accept_model_cost=True)
+        claimed=self.worker.claim()
+        self.store.settings=replace(self.settings,dev_login=False)
+        with self.assertRaises(ModelError): self.worker.model_call(job['id'],'hello')
+        with patch.object(self.worker,'runtime_factory') as runtime:
+            self.worker.execute(claimed)
+            runtime.assert_not_called()
+        with self.store.engine.connect() as con:
+            row=con.execute(select(jobs)).mappings().one()
+            self.assertEqual(row['status'],'cancelled')
+            self.assertEqual(row['calls_used'],0)
+            self.assertEqual(row['verdict'],'INCONCLUSIVE')
+            self.assertEqual(con.execute(select(func.count()).select_from(trials)).scalar_one(),0)

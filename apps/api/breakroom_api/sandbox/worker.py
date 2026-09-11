@@ -18,7 +18,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from breakroom.evaluator import run_in_process
 from breakroom.scenarios import load_case
 from ..team_config import TeamSettings
-from ..team_db import TeamStore, memberships, opaque_id, utcnow
+from ..team_db import TeamStore, memberships, opaque_id, utcnow, users
 from .config import SandboxSettings
 from .db import credentials, deployments, jobs, trials, workers
 from .providers import generate, ModelError
@@ -79,6 +79,15 @@ class Worker:
         if (not row or row['status']!='running' or row['worker_id']!=self.id or row['cancel_requested']
                 or row['expires_at'] <= utcnow()):
             return False
+        user = con.execute(select(users).where(users.c.id==row['submitted_by'])).mappings().first()
+        if not user:
+            return False
+        if user['issuer']=='breakroom:development' and not self.store.settings.dev_login:
+            return False
+        if user['issuer']=='breakroom:password':
+            from ..password_db import user_email_verified
+            if not self.store.settings.password_enabled or (self.store.settings.password_require_verification and not user_email_verified(con,user)):
+                return False
         role = con.execute(select(memberships.c.role).where(memberships.c.project_id==row['project_id'],
             memberships.c.user_id==row['submitted_by'])).scalar()
         return role in {'owner','developer'}
@@ -136,6 +145,9 @@ class Worker:
         error = None
         try:
             with self.store.engine.connect() as con:
+                current = con.execute(select(jobs).where(jobs.c.id==job['id'])).mappings().first()
+                if not self.allowed(con, current):
+                    cancelled.set()
                 deployment = con.execute(select(deployments).where(deployments.c.id==job['deployment_id'], deployments.c.project_id==job['project_id'])).mappings().one()
                 raw = self.vault.decrypt(deployment['source'], job['project_id'], 'source', deployment['id'])
                 package = validate_archive(raw, github_prefix=deployment['source_kind']=='github')

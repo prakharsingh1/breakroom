@@ -183,3 +183,55 @@ Verified public code revision **f1307558acad63d3123aaabce21856b3e316261d** passe
 This acceptance receipt changes documentation only; executable source is identical to the verified revision. No required implementation checks remain failing or untested. Production hosting/provisioning, operational security review and live model/email credentials remain external prerequisites, not claimed deployments or validations. The local API is healthy at schema 5 with normal 120/minute request limits, sandbox source storage enabled and runsc required. Trusted fixture workers have stopped; the UI correctly reports no available production worker on this Mac. The source and scripted GitHub import example are public; no runtime database, vault key, provider credential or private customer source is in Git.
 
 Working customer entry: http://127.0.0.1:3000/projects → open a project → **Agent sandbox**. Operator setup: docs/sandbox.md and infra/breakroom-sandbox-worker.service. General local startup remains `docker compose -f infra/compose.yaml -f infra/compose.team.yaml up -d --build --wait`. Enabling the optional sandbox control plane additionally uses infra/compose.sandbox.yaml with an operator-managed vault key; actual untrusted execution requires its separate Linux worker. Keep the standalone Python core usable independently.
+
+
+## Cloudflare free website — 2026-09-11
+
+The user explicitly authorized a free Cloudflare site deployment. Connected the
+selected account, verified Workers Free in its dashboard, and published
+**https://breakroom.snghprakhar.workers.dev**. Worker version:
+`e0933432-ca89-45d3-ac06-288ccbec9f9e`. Upload completed in 13.91s and trigger
+publication in 5.19s. Bundle: 1151.64 KiB (303.07 KiB gzip), startup 26ms;
+only static assets and version metadata bindings. No paid plan, container,
+database, email service, AI service, or domain purchase was enabled.
+
+This is the public website/documentation and 24-drill catalog deployment, **not
+the full customer service**. Cloudflare Free does not host the current Python,
+PostgreSQL, and gVisor architecture. All account and execution requests return
+explicit no-store HTTP 503 responses; the UI displays the limitation and directs
+visitors to local setup. No accounts, secrets, private customer sources, or fake
+test results were created or imported. The original full Next.js deployment and
+standalone Python engine remain available; backend hosting is still outstanding.
+
+Added a pinned vinext beta deployment target, a fixed public catalog build, a
+Worker boundary for unavailable services, repeatable deployment instructions,
+and a CI job that builds/dry-runs the Worker and exercises it locally without
+Cloudflare credentials. Configuration is in apps/web/wrangler.jsonc and
+vite.config.ts; instructions are in docs/cloudflare.md. Build outputs, generated
+catalog/runtime types, Wrangler state, and credentials remain ignored.
+
+Validation: `npm --prefix apps/web run build:cloudflare` passed including worker
+TypeScript checking; `wrangler deploy --config dist/server/wrangler.json --dry-run`
+passed; `npm --prefix apps/web run typecheck` and the ordinary Next production
+build passed. The 44-request check passed both locally and against public HTTPS:
+11 pages/deep links, catalog plus all 24 records, two unknown paths, and six
+unavailable-service cases. Evidence: artifacts/cloudflare/{build,dry-run,deploy,
+next-build}.log and {local-check,public-check}.json. Public browser navigation
+opened the library and the actual drill contract; signup displayed the precise
+unavailable explanation with zero credential inputs. The new site was inspected
+at desktop and phone sizes before handoff.
+
+During integration, pinned react-server-dom-webpack to the existing React
+19.2.8 release after the initializer selected an incompatible newer peer. Fixed
+rendered security headers and separated generated Workers globals from Next
+types. Next typecheck regenerates route metadata because vinext also writes
+generated routes. A stale local preview caused a missing dynamic asset during a
+rebuild; the current public bundle passed fresh browser navigation. Existing
+Python, database, billing, and sandbox code did not change. Previous 341 Python,
+15 browser, and 477 mutation acceptance remains the applicable engine evidence;
+it is not a claim that those suites were rerun for this website-only change.
+
+Next: connect a separately hosted production API, private PostgreSQL, TLS email,
+and supervised Linux gVisor worker before offering hosted customer accounts and
+agent runs. This needs new infrastructure; the free website does not imply those
+services exist. Free Workers request/CPU limits apply; see docs/cloudflare.md.

@@ -13,6 +13,7 @@ export default function Demo({ caseId = 'refund-response-lost', compact = false 
   const [notice, setNotice] = useState('');
   const controller = useRef<AbortController | null>(null);
   const run = runs[selected];
+  if (process.env.NEXT_PUBLIC_BREAKROOM_SITE_ONLY === '1') return <section className="local-drill"><span className="eyebrow">RUN WITH THE PYTHON ENGINE</span>{compact ? <h3>Try the crash test locally</h3> : <h2>Try the crash test locally</h2>}<p>Hosted test execution is not connected to this website yet. Run the faulty and corrected reference agents locally, inspect their actual effects, and export a regression test.</p><Link className="button accent" href="/docs#quickstart">Open the quickstart →</Link></section>;
   async function execute(agent: 'faulty' | 'corrected') {
     setError(''); setNotice(''); setPending(agent);
     const request = new AbortController(); controller.current = request;

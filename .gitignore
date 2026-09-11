@@ -26,3 +26,7 @@ dist/
 !.env.production.example
 
 output/playwright/sandbox-run.json
+.wrangler/
+.dev.vars*
+apps/web/cloudflare/catalog.json
+apps/web/worker-configuration.d.ts

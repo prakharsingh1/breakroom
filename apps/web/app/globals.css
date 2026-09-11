@@ -293,3 +293,6 @@ li{padding-bottom:9px}
 @media(max-width:600px) { .sandbox-intro { grid-template-columns:1fr; padding-top:20px; }.sandbox-run-row { grid-template-columns:1fr auto; gap:12px; }.sandbox-run-row > .status { grid-column:1; }.sandbox-run-row > span:nth-child(2) { grid-row:2; }.sandbox-run-row > span:last-child { display:none; }.sandbox-runtime { padding:20px; }.sandbox-workspace .team-section { padding:20px 16px; }.sandbox-investigator .evidence-pair { margin-left:-8px; margin-right:-8px; }.sandbox-trial-select select { font-size:13px; } }
 .sandbox-investigator .evidence-pair { background:var(--dark); color:#e7eeea; border-radius:10px; overflow:hidden; border:1px solid #243234; }
 .sandbox-workspace .evidence-pair h3 { font-size:15px; margin:0; color:#e7eeea; }
+.hosting-notice { padding: 14px max(24px, calc((100vw - 1280px) / 2)); background: #e9eee7; color: #263c2f; font-size: 14px; line-height: 1.65; border-bottom: 1px solid #c8d3c5; }
+.hosting-notice strong { margin-right: 5px; }
+.hosting-notice a { color: inherit; text-decoration: underline; text-underline-offset: 3px; font-weight: 600; }

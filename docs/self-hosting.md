@@ -2,6 +2,8 @@
 
 The application includes real email/password accounts and persistent private workspaces. Publishing the source on GitHub does not host the application. Choose a server and domain to operate your own installation.
 
+For a free public website on Cloudflare, see [the Cloudflare deployment guide](cloudflare.md). That website serves documentation and the drill catalog; the customer services below still need separate hosting.
+
 ## Local use
 
 ```sh

@@ -1,6 +1,7 @@
 import { defineConfig } from '@playwright/test';
 import path from 'node:path';
-const root = path.resolve(__dirname, '../..');
+import { fileURLToPath } from 'node:url';
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const python = process.env.BREAKROOM_TEST_PYTHON || path.join(root, '.venv-api/bin/python');
 const pythonCommand = "'" + python.replaceAll("'", "'\\''") + "'";
 const team = process.env.BREAKROOM_TEAM_E2E === '1';

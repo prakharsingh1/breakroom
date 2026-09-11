@@ -13,6 +13,38 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  cloudflare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      CI: 'true'
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - name: Build the free website target
+        working-directory: apps/web
+        run: |
+          npm ci
+          npm run build:cloudflare
+          npx wrangler deploy --config dist/server/wrangler.json --dry-run
+      - name: Verify the actual local Worker
+        working-directory: apps/web
+        run: |
+          npm run preview:cloudflare > /tmp/breakroom-cloudflare-preview.log 2>&1 &
+          preview_pid=$!
+          trap 'kill "$preview_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8787/api/drills > /dev/null; then break; fi
+            sleep 1
+          done
+          npm run check:cloudflare
   verify:
     runs-on: ubuntu-24.04
     timeout-minutes: 20

@@ -6,6 +6,7 @@ const config: NextConfig = {
   poweredByHeader: false,
   devIndicators: false,
   async rewrites() {
+    if (process.env.BREAKROOM_CLOUDFLARE_BUILD === '1') return [];
     return [
       { source: '/api/team/:path*', destination: `${teamOrigin}/api/team/:path*` },
       { source: '/api/:path*', destination: `${apiOrigin}/api/:path*` }

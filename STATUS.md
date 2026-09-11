@@ -1,6 +1,6 @@
 # Breakroom status
 
-Updated: 2026-09-10
+Updated: 2026-09-11
 
 Customer product upgrade complete locally: real email/password accounts, password recovery/verification, guided setup, private workspaces, real report summaries and check-specific recommendations, visual suite builder and email-bound invitations. The public repository [prakharsingh1/breakroom](https://github.com/prakharsingh1/breakroom) was created, but is still empty: source transfer is blocked by repeated TLS/connection failures. The complete implementation is committed locally. No public application deployment or outbound email has been performed.
 
@@ -121,3 +121,10 @@ Publication did **not** succeed. Homebrew Git HTTPS failed with curl 55/broken p
 All source remains in local Git. The ignored `artifacts/publication/breakroom.bundle` contains the complete committed repository for transfer; it is generated after this handoff commit. Once GitHub transfer connectivity works, run `git push -u origin main` from this directory, then verify the remote commit and Actions checks. The origin is https://github.com/prakharsingh1/breakroom.git. GitHub's empty repository needs no additional creation or permission approval. No public application hosting or SMTP delivery is configured.
 
 The final normal local Compose configuration was restored after browser testing; the team API is healthy with its default request budget. Local account creation remains available at http://127.0.0.1:3000/signup. The next external website step remains operator-provided HTTPS hosting, private PostgreSQL and TLS SMTP, followed by actual email-delivery checks; see docs/self-hosting.md.
+
+
+## Publication retry — 2026-09-11
+
+Resumed the user-authorized publication with a clean working tree. GitHub still reports PUBLIC with no default branch. `git -c http.connectTimeout=15 -c http.lowSpeedLimit=1 -c http.lowSpeedTime=30 push -u origin main` failed with curl 55/LibreSSL bad-record-MAC. Retried with the existing SSH identity on the explicit standard github.com port 22, strict host-key checking and bounded connection/keepalive settings; upload disconnected with a broken pipe. The prior SSH attempt used ssh.github.com. `gh api repos/prakharsingh1/breakroom/branches/main --jq .commit.sha` again returned 404 Branch not found, so neither retry published source. No remote CI ran and no application code changed. The previously completed local acceptance results above remain the applicable test evidence.
+
+The source bundle is refreshed after committing this note. Next action requires restored GitHub transfer connectivity, for example a different working network, then `git push -u origin main` and remote CI verification. No credential or certificate settings were weakened, no paid service was enabled, and no additional repository creation is needed.

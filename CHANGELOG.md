@@ -19,3 +19,13 @@
 - Added real backup/restore verification, scope guards, operator recovery documentation, accessibility checks and browser regressions.
 
 Read [STATUS.md](STATUS.md) for exact executed gates and remaining configuration prerequisites. This source has not been published as a package, hosted service or commercial offer. Public licensing remains an owner-reviewed proposal.
+
+## Customer agent sandbox — 2026-09-11
+
+- Private ZIP and commit-pinned GitHub source versions; AES-GCM source/key storage, owner provider credentials and bounded run consent.
+- Dedicated gVisor guest runtime with trusted external simulator/oracle, fake-tool RPC, concurrency, resource limits, capped text model broker, durable queue, cancellation/expiry/recovery and per-trial evidence.
+- Workspace sandbox, 24-drill/72-trial presets, evidence inspector and JSON downloads; migration 5 and backup/restore coverage.
+- Schema-1 oracle 1.2 now enforces explicitly declared adapter capabilities before execution, matching schema-2 behavior. Older oracle-1.1 results are incompatible for release comparisons; rerun both sides with the current engine.
+- Invitation copy waits for creation/refresh to finish; real browser clipboard verification.
+
+Public application hosting and real provider calls are not configured or claimed. See STATUS for local and remote test results.

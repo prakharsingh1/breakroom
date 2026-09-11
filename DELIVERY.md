@@ -39,7 +39,7 @@ In the browser, execute the faulty reference, inspect **What the agent saw** bes
 
 The supported local Python contract is `run(task, tools, context) -> AgentResult`. The injected facade supplies TestPay/TestDesk tools, and the result supplies structured claims with observed evidence references. [The complete adapter example](examples/customer-adapter/adapter.py) supports the five initial drills; the packaged reference additionally shows event and grouped-request handling.
 
-Customer code runs on its owner's machine or CI as trusted Python. A subprocess is not a security sandbox. The hosted demo executes only fixed built-ins; team uploads never execute customer code.
+Customer code runs on its owner's machine or CI as trusted Python. A subprocess is not a security sandbox. The hosted demo executes only fixed built-ins; report uploads never execute customer code. The optional authenticated [agent sandbox](docs/sandbox.md) executes separately deployed adapters only in a configured worker.
 
 Prepare one minimized report, inspect it locally, then explicitly upload through its project:
 
@@ -104,3 +104,5 @@ The next external step is an owner-reviewed deployment with HTTPS and TLS SMTP, 
 Billing defaults to disabled. Signed fixtures and the real SDK with offline transport validate the supported monthly USD test contract; no Stripe sandbox purchase or live payment occurred. Merchant eligibility, credentials, test price/webhook and an authorized external sandbox test remain separate. Live billing is rejected by this implementation. The free local engine remains useful independently.
 
 Passing cases establish behavior only under modeled conditions. Provider equivalence, universal safety, statistical model performance, production readiness, trademark/domain/package ownership and a public license are not claimed. Review [the license proposal](LICENSE-PROPOSAL.md) and [security scope](SECURITY.md) before adopting a license or operating a public service.
+
+Customer sandbox extension: ZIP and pinned GitHub imports, encrypted provider keys, queued/cancelled repeated runs, gVisor worker, actual trial evidence and downloads. See [operator setup](docs/sandbox.md), [sandbox UI](apps/web/components/ProjectSandbox.tsx), [worker](apps/api/breakroom_api/sandbox/worker.py) and current [validation](STATUS.md). This remains source publication and local/CI verification; a public customer application endpoint is not deployed.

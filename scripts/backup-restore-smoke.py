@@ -12,6 +12,9 @@ from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 import hashlib
 import json
+import base64
+import io
+import zipfile
 import os
 from pathlib import Path
 import re
@@ -37,7 +40,7 @@ from breakroom.scenarios import load_case
 from breakroom.uploads import prepare_upload, upload_digest, validate_upload_envelope
 from breakroom_api.team_config import TeamSettings
 from breakroom_api.team_db import (TeamStore, api_keys, login_attempts, memberships,
-                                  projects, reports, sessions, suites, users, invitations)
+                                  projects, reports, sessions, suites, users, invitations, metadata)
 
 
 def canonical(value):
@@ -63,7 +66,7 @@ def local_database_location(value):
 def snapshot(connection):
     names = [row["tablename"] for row in connection.execute(
         "SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY tablename")]
-    if not names or any(not re.fullmatch(r"team_[a-z_]+", name) for name in names):
+    if not names or any(name not in metadata.tables for name in names):
         raise ValueError("Unexpected disposable database tables")
     content = {}
     for name in names:
@@ -107,6 +110,16 @@ def seed(store):
     from breakroom_api.billing_db import accounts, operations, events
     from breakroom_api.password_auth import hash_password, verify_password
     from breakroom_api.password_db import PASSWORD_ISSUER, credentials, account_tokens, auth_limits
+    from breakroom_api.sandbox.db import deployments, credentials as model_keys, jobs, trials, workers
+    from breakroom_api.sandbox.vault import Vault
+    vault_key = base64.b64encode(secrets.token_bytes(32)).decode()
+    vault = Vault(vault_key)
+    model_key = secrets.token_urlsafe(32)
+    archive = io.BytesIO()
+    with zipfile.ZipFile(archive, 'w') as package:
+        package.writestr('agent.py', 'def run(*args): return None')
+        package.writestr('breakroom-agent.json', json.dumps({'version':1,'entrypoint':'agent:run','capabilities':[]}))
+    agent_source = archive.getvalue()
     now = datetime.now(timezone.utc)
     owner, viewer, project = (str(uuid.uuid4()) for _ in range(3))
     # These values exist only in this process. The database/archive retains
@@ -155,6 +168,18 @@ def seed(store):
         con.execute(insert(suites).values(id=str(uuid.uuid4()), project_id=project, name="Synthetic private suite",
             cases=[{key: prepared[0]["report"]["case"][key] for key in ("case_id", "case_version", "manifest_hash")}],
             created_at=now, updated_at=now))
+        deployment_id, key_id, job_id, worker_id = (str(uuid.uuid4()) for _ in range(4))
+        con.execute(insert(deployments).values(id=deployment_id,project_id=project,name='Restore fixture',source_kind='zip',
+            sha256=hashlib.sha256(agent_source).hexdigest(),manifest={'version':1,'entrypoint':'agent:run','capabilities':[]},
+            source=vault.encrypt(agent_source,project,'source',deployment_id),created_at=now))
+        con.execute(insert(model_keys).values(id=key_id,project_id=project,provider='openai',secret=vault.encrypt(model_key.encode(),project,'key',key_id),created_at=now))
+        con.execute(insert(jobs).values(id=job_id,project_id=project,deployment_id=deployment_id,submitted_by=owner,credential_id=key_id,
+            request_key='synthetic-restoration-key',request_hash='a'*64,plan=[{'case_id':'refund-response-lost','seed':0,'trial':1}],
+            provider='openai',model='gpt-4.1-mini',max_calls=2,max_output_tokens=64,calls_used=1,
+            usage={'input_tokens':0,'output_tokens':0,'unknown_calls':1},status='error',verdict='FAIL',cancel_requested=False,
+            runtime='runsc',created_at=now,expires_at=now+timedelta(days=1)))
+        con.execute(insert(trials).values(job_id=job_id,position=0,report=prepared[0]['report'],created_at=now))
+        con.execute(insert(workers).values(id=worker_id,runtime='runsc',image_id='sha256:'+'a'*64,development_only=False,heartbeat_at=now))
         # Database fidelity fixtures only: no provider request, signed webhook
         # claim, merchant account or external charge is involved in this drill.
         con.execute(insert(accounts).values(project_id=project, customer_id="cus_synthetic_backup", subscription_id="sub_synthetic_backup",
@@ -168,7 +193,7 @@ def seed(store):
             target_id="sub_synthetic_backup", target_kind="subscription", provider_created=int(now.timestamp()), status="retrying",
             attempts=2, lease_token=None, lease_until=None, retry_at=now + timedelta(seconds=30), created_at=now, processed_at=None))
     return {"owner": owner, "viewer": viewer, "project": project, "password": password,
-            "invite_token": invite_token, "account_token": account_token}
+            "invite_token": invite_token, "account_token": account_token, "vault_key": vault_key, "model_key": model_key, "agent_source": agent_source}
 
 
 def run(out):
@@ -279,6 +304,19 @@ def run(out):
                 if any(secret.encode() in canonical(restored) for secret in (
                         fixture["password"], fixture["invite_token"], fixture["account_token"])):
                     raise ValueError("A plaintext synthetic credential was stored")
+                from breakroom_api.sandbox.vault import Vault
+                from breakroom_api.sandbox.sources import validate_archive
+                vault = Vault(fixture['vault_key'])
+                restored_key = restored['sandbox_credentials'][0]
+                if vault.decrypt(restored_key['secret'], fixture['project'], 'key', restored_key['id']).decode() != fixture['model_key']:
+                    raise ValueError('Restored model credential cannot be decrypted')
+                restored_agent = restored['sandbox_deployments'][0]
+                source = vault.decrypt(restored_agent['source'],fixture['project'],'source',restored_agent['id'])
+                if source != fixture['agent_source'] or validate_archive(source).sha256 != restored_agent['sha256']:
+                    raise ValueError('Restored agent source differs')
+                if fixture['model_key'].encode() in canonical(restored):
+                    raise ValueError('Model credential was stored in plaintext')
+                result['sandbox_encryption_and_source_verified'] = True
                 result["password_hash_verified"] = True
                 result["account_and_invitation_hashes_verified"] = 2
                 result["plaintext_credentials_absent"] = True
@@ -318,7 +356,8 @@ def run(out):
                 if canonical(after_deletion) != canonical(deleted_source):
                     raise ValueError("Post-backup deletion reconciliation differs")
                 for table in ("team_projects", "team_reports", "team_memberships", "team_api_keys", "team_suites",
-                              "team_billing_accounts", "team_billing_operations", "team_billing_events", "team_invitations"):
+                              "team_billing_accounts", "team_billing_operations", "team_billing_events", "team_invitations",
+                              "sandbox_deployments", "sandbox_credentials", "sandbox_jobs", "sandbox_trials"):
                     if after_deletion[table]:
                         raise ValueError("Deleted project data remains after restore reconciliation")
                 result["post_backup_deletion_replayed"] = True

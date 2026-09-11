@@ -1,0 +1,8 @@
+FROM python:3.12.14-slim
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+WORKDIR /runner
+RUN mkdir -p /agent /runner/breakroom && touch /runner/breakroom/__init__.py && chmod 755 /agent
+COPY packages/breakroom-core/src/breakroom/models.py /runner/breakroom/models.py
+COPY infra/sandbox/entry.py /runner/entry.py
+USER 65532:65532
+ENTRYPOINT ["python", "-u", "/runner/entry.py"]

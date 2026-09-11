@@ -15,7 +15,7 @@ from sqlalchemy import (JSON, Boolean, CheckConstraint, Column, DateTime, Foreig
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.schema import CreateSchema
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 metadata = MetaData()
 versions = Table("team_schema_version", metadata, Column("version", Integer, primary_key=True), Column("applied_at", DateTime(timezone=True), nullable=False))
 users = Table("team_users", metadata,
@@ -90,6 +90,7 @@ class TeamStore:
             connect_args={"connect_timeout": 5, "options": "-csearch_path=" + settings.database_schema + " -cstatement_timeout=10000"})
 
     def migrate(self):
+        from .sandbox.db import SANDBOX_TABLES
         from .billing_db import BILLING_TABLES
         from .password_db import PASSWORD_TABLES
         with self.engine.begin() as con:
@@ -97,7 +98,7 @@ class TeamStore:
             con.execute(text("SELECT pg_advisory_xact_lock(1844271001)"))
             versions.create(con, checkfirst=True)
             current = con.execute(select(versions.c.version)).scalars().all()
-            if any(version not in {1, 2, 3, 4} for version in current):
+            if any(version not in {1, 2, 3, 4, 5} for version in current):
                 raise ValueError("Unsupported team database schema version; run a reviewed migration")
             metadata.create_all(con)
             if not current:
@@ -124,6 +125,11 @@ class TeamStore:
                 for table in PASSWORD_TABLES:
                     table.create(con, checkfirst=True)
                 con.execute(insert(versions).values(version=4, applied_at=utcnow()))
+
+            if 5 not in current:
+                for table in SANDBOX_TABLES:
+                    table.create(con, checkfirst=True)
+                con.execute(insert(versions).values(version=5, applied_at=utcnow()))
 
     def get_user(self, user_id):
         with self.engine.connect() as con:
@@ -176,12 +182,13 @@ class TeamStore:
     def cleanup_expired(self, *, batch_size=1000):
         """Delete a bounded batch per table; concurrent sweepers skip held rows."""
         from .password_db import account_tokens, auth_limits
+        from .sandbox.db import jobs
         if type(batch_size) is not int or not 1 <= batch_size <= 10000:
             raise ValueError("Expiry cleanup batch size must be 1..10000")
         counts = {}
         cutoff = utcnow()
         with self.engine.begin() as con:
-            for name, table, key in (("reports", reports, reports.c.id),
+            for name, table, key in (("sandbox_jobs", jobs, jobs.c.id), ("reports", reports, reports.c.id),
                     ("sessions", sessions, sessions.c.token_hash),
                     ("login_attempts", login_attempts, login_attempts.c.state_hash),
                     ("invitations", invitations, invitations.c.id),

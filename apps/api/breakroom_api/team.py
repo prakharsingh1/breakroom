@@ -170,7 +170,7 @@ def report_view(row, *, duplicate=False):
         "provenance": "customer_generated", "privacy": row["upload"]["privacy"], "duplicate": duplicate}
 
 
-def create_app(settings: TeamSettings | None = None, store: TeamStore | None = None, *, billing_provider=None):
+def create_app(settings: TeamSettings | None = None, store: TeamStore | None = None, *, billing_provider=None, sandbox_settings=None):
     settings = settings or TeamSettings.from_environment()
     settings.validate()
     store = store or TeamStore(settings)
@@ -300,6 +300,8 @@ def create_app(settings: TeamSettings | None = None, store: TeamStore | None = N
 
     from .team_billing import configure_billing
     billing = configure_billing(app, settings, store, authorize, provider=billing_provider)
+    from .sandbox.api import configure_sandbox
+    configure_sandbox(app, settings, store, authorize, settings=sandbox_settings)
     from .team_workspace import configure_workspace
     configure_workspace(app, settings, store, identity, authorize, billing, project_view, report_view)
 
@@ -366,6 +368,11 @@ def create_app(settings: TeamSettings | None = None, store: TeamStore | None = N
                 raise HTTPException(422, "Provide a name or retention period")
             con.execute(update(projects).where(projects.c.id == project_id).values(**changes))
             if body.retention_days is not None:
+                from .sandbox.db import jobs as sandbox_jobs
+                for row in con.execute(select(sandbox_jobs.c.id, sandbox_jobs.c.created_at, sandbox_jobs.c.expires_at).where(sandbox_jobs.c.project_id == project_id)).mappings():
+                    shortened = row['created_at'] + timedelta(days=body.retention_days)
+                    if shortened < row['expires_at']:
+                        con.execute(update(sandbox_jobs).where(sandbox_jobs.c.id == row['id']).values(expires_at=shortened))
                 for row in con.execute(select(reports.c.id, reports.c.created_at, reports.c.expires_at).where(reports.c.project_id == project_id)).mappings():
                     shortened = row["created_at"] + timedelta(days=body.retention_days)
                     if shortened < row["expires_at"]:

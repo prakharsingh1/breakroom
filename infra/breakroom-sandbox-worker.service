@@ -1,0 +1,24 @@
+# Reviewed example for a dedicated Linux worker host. Configure paths and a
+# non-root service account with access to its dedicated container daemon.
+[Unit]
+Description=Breakroom isolated agent worker
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=breakroom-worker
+WorkingDirectory=/opt/breakroom
+EnvironmentFile=/etc/breakroom/sandbox-worker.env
+Environment=PYTHONPATH=/opt/breakroom/apps/api:/opt/breakroom/packages/breakroom-core/src
+ExecStart=/opt/breakroom/venv-team/bin/python -m breakroom_api.sandbox.worker
+Restart=always
+RestartSec=3
+TimeoutStopSec=45
+KillMode=control-group
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

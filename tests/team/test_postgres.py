@@ -89,7 +89,7 @@ class PostgresTeamTests(unittest.TestCase):
         self.store.migrate()
         with self.store.engine.connect() as con:
             self.assertIn("PostgreSQL", con.execute(text("SELECT version()")).scalar_one())
-            self.assertEqual(con.execute(select(versions.c.version).order_by(versions.c.version)).scalars().all(), [1, 2, 3, 4])
+            self.assertEqual(con.execute(select(versions.c.version).order_by(versions.c.version)).scalars().all(), [1, 2, 3, 4, 5])
             self.assertEqual(con.execute(text("SELECT current_schema()")).scalar_one(), self.settings.database_schema)
         with self.assertRaises(IntegrityError), self.store.engine.begin() as con:
             con.execute(update(projects).where(projects.c.id == self.project).values(retention_days=0))
@@ -145,7 +145,7 @@ class PostgresTeamTests(unittest.TestCase):
             # Insert directly because the login creation path already sweeps old attempts.
             with self.store.engine.begin() as con:
                 con.execute(insert(login_attempts).values(state_hash=str(index) * 64, nonce="nonce", code_verifier="verifier", expires_at=utcnow() - timedelta(seconds=1)))
-        expected = {"reports": 1, "sessions": 1, "login_attempts": 1, "invitations": 0, "account_tokens": 0, "auth_limits": 0}
+        expected = {"sandbox_jobs": 0, "reports": 1, "sessions": 1, "login_attempts": 1, "invitations": 0, "account_tokens": 0, "auth_limits": 0}
         self.assertEqual(self.store.cleanup_expired(batch_size=1), expected)
         self.assertEqual(self.store.cleanup_expired(), expected)
         self.assertIsNotNone(self.client.get("/api/team/me").json()["user"])

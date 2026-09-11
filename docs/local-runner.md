@@ -41,7 +41,7 @@ docker build -f examples/customer-adapter/Dockerfile -t breakroom-local .
 docker run --rm --network none --read-only --tmpfs /tmp:rw,noexec,nosuid,size=128m --cap-drop ALL --security-opt no-new-privileges --pids-limit 64 --memory 256m --cpus 1 -v "$PWD/artifacts:/work/artifacts" breakroom-local demo --output /work/artifacts/demo
 ```
 
-Create `artifacts` before running. This optional container command needs a working local Docker installation; ordinary core usage does not. Container isolation is a separate control, not a claim that trusted local Python is sandboxed by Breakroom itself. No hosted arbitrary-code runner exists.
+Create `artifacts` before running. This optional container command needs a working local Docker installation; ordinary core usage does not. Container isolation is a separate control, not a claim that trusted local Python is sandboxed by Breakroom itself. For separately configured authenticated execution, see the [gVisor agent sandbox](sandbox.md); its controls are independent of this trusted local runner.
 
 ## Data artifacts and limits
 

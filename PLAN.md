@@ -7,7 +7,7 @@ Authoritative source: `BREAKROOM_CODEX_SPEC.md`. The initial directory contains 
 - `packages/breakroom-core`: Python 3.11+ typed local simulator, bounded scenario data, independent evaluator, process runner, CLI, versioned reports and exports. Each trial owns a SQLite database. Synthetic tools never contact customer services.
 - `scenario-packs/support-refunds`: reviewed JSON manifests and versioned compatibility records.
 - `examples`: scripted agents and the local customer adapter contract.
-- `apps/api`: FastAPI service for fixed built-in runs; no arbitrary hosted agent execution.
+- `apps/api`: FastAPI service for fixed built-in demo runs; authenticated sandbox control plane is separate from customer execution workers.
 - `apps/web`: Next.js/TypeScript interface using reports from actual engine executions.
 - `tests`: core invariants, adversarial controls, artifact contracts, API integration, browser journeys.
 - Hosted PostgreSQL reporting follows the validated local product and coverage pack. Billing follows team features; neither is assumed available.
@@ -44,3 +44,5 @@ The user explicitly requests customer-agent deployment and stress testing, choos
 6. Verify malformed packages/RPC, import redirects, secrets, tenant controls, cancellation/quotas, independent verdicts, real container runs, browser acceptance and remote CI.
 
 External hosting, dedicated execution-host provisioning and actual provider credentials remain unconfigured. Do not claim external deployment, live model execution or universal safety from local/offline tests.
+
+Sandbox implementation and local gates complete; next gate is the real Linux gVisor workflow and final public source verification. Operator hosting/provisioning remains external.

@@ -10,9 +10,10 @@ import ProjectOverview from './ProjectOverview';
 import ProjectConnect from './ProjectConnect';
 import ProjectSuites from './ProjectSuites';
 import ProjectInvitations from './ProjectInvitations';
+import ProjectSandbox from './ProjectSandbox';
 import { CatalogCase, Invitation, ProjectInsights } from '@/lib/workspace';
 
-type Tab = 'overview' | 'reports' | 'connect' | 'suites' | 'members' | 'keys' | 'settings' | 'billing';
+type Tab = 'sandbox' | 'overview' | 'reports' | 'connect' | 'suites' | 'members' | 'keys' | 'settings' | 'billing';
 export default function TeamProject({ id }: { id: string }) {
   const { session, error: sessionError, loading, refresh } = useTeamSession();
   const base = 'projects/' + encodeURIComponent(id);
@@ -93,9 +94,10 @@ export default function TeamProject({ id }: { id: string }) {
   const visibleReports = reports.filter(r => (verdict === 'all' || r.verdict === verdict) && [r.case_id, caseNames.get(r.case_id) || '', r.id].join(' ').toLowerCase().includes(query.trim().toLowerCase())).sort((a, b) => sort === 'oldest' ? Date.parse(a.created_at) - Date.parse(b.created_at) : sort === 'case' ? (caseNames.get(a.case_id) || a.case_id).localeCompare(caseNames.get(b.case_id) || b.case_id) : Date.parse(b.created_at) - Date.parse(a.created_at));
   return <div className="wrap inner-page team-page">
     <Link href="/projects" className="back-link">← All projects</Link><div className="project-heading"><div><span className="eyebrow">PRIVATE TEAM PROJECT / {project.role}</span><h1>{project.name}<span>.</span></h1><p className="lead">Your agent’s evidence, ready for the next release.</p></div><div className="project-context"><span className="project-privacy">Private workspace</span><span>{members.length} {members.length === 1 ? 'member' : 'members'} · {project.retention_days}-day report retention</span></div></div>
-    <nav className="team-tabs" aria-label="Project sections">{(['overview','reports','connect','suites','members','keys','settings',...(owner?['billing']:[])] as Tab[]).map(t => <button aria-current={tab === t ? 'page' : undefined} onClick={() => {setTab(t);setError('');setNotice('');}} key={t}>{{overview:'Overview',reports:'Reports',connect:'Connect agent',suites:'Private suites',members:'Members',keys:'API keys',settings:'Settings',billing:'Billing'}[t]}</button>)}</nav>
+    <nav className="team-tabs" aria-label="Project sections">{(['overview','sandbox','reports','connect','suites','members','keys','settings',...(owner?['billing']:[])] as Tab[]).map(t => <button aria-current={tab === t ? 'page' : undefined} onClick={() => {setTab(t);setError('');setNotice('');}} key={t}>{{sandbox:'Agent sandbox',overview:'Overview',reports:'Reports',connect:'Connect agent',suites:'Private suites',members:'Members',keys:'API keys',settings:'Settings',billing:'Billing'}[t]}</button>)}</nav>
     {error && <div className="light-error" role="alert">{error}</div>}{notice && <p className="team-notice" role="status">{notice}</p>}
     {secret && <section className="one-time-key" aria-label="New API key"><h2>Save this key once</h2><p>Store it in your CI secret manager. This page keeps it in memory only until you dismiss it or leave.</p><code>{secret}</code><div className="team-actions"><button className="button accent" onClick={async () => { try { await navigator.clipboard.writeText(secret); setCopied(true); } catch { setError('Clipboard unavailable. Select and copy the key.'); } }}>{copied ? 'Copied' : 'Copy secret'}</button><button className="button outline" onClick={() => {setSecret('');setNotice('Key secret dismissed. It is not retrievable.');}}>I’ve saved this key</button></div></section>}
+    {tab === 'sandbox' && <ProjectSandbox projectId={id} csrf={session?.csrf_token || null} role={project.role} catalog={catalog} />}
     {tab === 'billing' && owner && <TeamBilling projectId={id} csrf={session?.csrf_token||null} />}
     {tab === 'overview' && <ProjectOverview id={id} insights={insights} catalog={catalog} error={insightError} retry={() => void loadInsights()} onConnect={() => setTab('connect')} onSuites={() => setTab('suites')} />}
     {tab === 'connect' && <ProjectConnect projectId={id} canManageKeys={owner} onKeys={() => setTab('keys')} onUpload={() => setTab('reports')} />}

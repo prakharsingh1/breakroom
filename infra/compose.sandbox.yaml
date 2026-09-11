@@ -1,0 +1,14 @@
+# Optional control-plane configuration. Run the dedicated worker separately;
+# the web/API services never receive the Docker socket or execute customer code.
+services:
+  team-api:
+    environment:
+      BREAKROOM_SANDBOX_ENABLED: '1'
+      BREAKROOM_SANDBOX_VAULT_KEY: ${BREAKROOM_SANDBOX_VAULT_KEY:?Set the sandbox encryption key}
+      BREAKROOM_SANDBOX_RUNTIME: ${BREAKROOM_SANDBOX_RUNTIME:-runsc}
+      BREAKROOM_SANDBOX_TRUSTED_DEV: ${BREAKROOM_SANDBOX_TRUSTED_DEV:-0}
+      BREAKROOM_SANDBOX_OPENAI_MODELS: ${BREAKROOM_SANDBOX_OPENAI_MODELS:-gpt-4.1-mini}
+      BREAKROOM_SANDBOX_ANTHROPIC_MODELS: ${BREAKROOM_SANDBOX_ANTHROPIC_MODELS:-claude-sonnet-4-6}
+    networks: [team, sandbox-egress]
+networks:
+  sandbox-egress: {}

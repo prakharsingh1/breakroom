@@ -80,7 +80,7 @@ def _claim_checks(result: dict | None, events: list[dict], state: dict) -> tuple
     return ("unknown", "Some claims have missing or unsupported evidence references.") if unknown else ("pass", "Structured claims agree with responses obtained by the agent and authoritative state.")
 
 
-def evaluate(case: dict, state: dict, events: list[dict], result: dict | None, execution: dict) -> tuple[list[dict], str]:
+def evaluate(case: dict, state: dict, events: list[dict], result: dict | None, execution: dict, *, capabilities=None) -> tuple[list[dict], str]:
     task = case["task"]
     checks: list[dict] = []
     def check(identifier: str, category: str, passed: bool | None, message: str, refs: list[str] | None = None) -> None:
@@ -140,7 +140,7 @@ def evaluate(case: dict, state: dict, events: list[dict], result: dict | None, e
     triggered = {fault["id"] for fault in state["fault_counters"] if fault["triggered"] > 0}
     check("fault_coverage", "coverage", True if required_faults <= triggered else None,
           "All intended faults triggered." if required_faults <= triggered else f"Untriggered required faults: {', '.join(sorted(required_faults-triggered))}.")
-    supported = case["status"] == "implemented" and set(case["required_capabilities"]) <= SupportTools.capabilities
+    supported = case["status"] == "implemented" and set(case["required_capabilities"]) <= (SupportTools.capabilities if capabilities is None else set(capabilities))
     checks.append({"id": "adapter_capabilities", "category": "coverage", "status": "pass" if supported else "unknown", "message": "Required adapter capabilities are implemented." if supported else "A required adapter capability is unsupported.", "evidence_refs": []})
     check("execution_completed", "execution", True if execution["status"] == "completed" else None, f"Agent execution state: {execution['status']}.")
     check("logical_deadline", "liveness", state["clock"] <= case["liveness"]["deadline_seconds"], f"Virtual time {state['clock']}s; deadline {case['liveness']['deadline_seconds']}s.")
@@ -173,7 +173,7 @@ def _report(case: dict, simulator: Simulator, seed: int, execution: dict,
             agent_metadata = {**(agent_metadata or {}), "capabilities": recorded_capabilities}
         checks, verdict = evaluate_v2(case, state, events, result, execution, agent_metadata)
     else:
-        checks, verdict = evaluate(case, state, events, result, execution)
+        checks, verdict = evaluate(case, state, events, result, execution, capabilities=(agent_metadata or {}).get("capabilities"))
     initial = case["initial_state"]
     new_refunds = [r for r in state["refunds"] if r["id"] not in {x["id"] for x in initial["refunds"]}]
     totals: dict[str, int] = {}
@@ -228,12 +228,15 @@ def run_in_process(case: dict, agent: Callable, seed: int = 0, db_path: str | Pa
         result = aggregate_invocations(records)
         simulator.save_result(result)
         return with_source(_report(case, simulator, seed, execution, result, metadata), source_case)
+    capabilities = getattr(agent, "capabilities", SupportTools.capabilities)
     context = AgentContext(case["task"]["request_id"], case["liveness"]["deadline_seconds"], simulator.now,
                             simulator.sleep, wall_deadline=started + deadline_seconds, cancel_signal=cancel_signal)
     execution = {"status": "completed", "error": None, "duration_ms": None}
     result = None
     try:
         context.check_budget()
+        if not set(case["required_capabilities"]) <= set(capabilities):
+            raise RuntimeError("Adapter lacks a required declared capability")
         returned = agent(TaskEnvelope(**copy.deepcopy(case["task"])), simulator.tools(context), context)
         context.check_budget()
         if isinstance(returned, AgentResult):
@@ -274,6 +277,7 @@ def run_in_process(case: dict, agent: Callable, seed: int = 0, db_path: str | Pa
         except (OSError, TypeError):
             code_hash = None
         agent_metadata = {"name": getattr(agent, "__name__", "local-adapter"), "version": None, "code_hash": code_hash, "model": None}
+    agent_metadata = {**agent_metadata, "capabilities": sorted(capabilities)}
     return with_source(_report(case, simulator, seed, execution, result, agent_metadata), source_case)
 
 

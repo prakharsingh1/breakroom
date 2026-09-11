@@ -1,6 +1,6 @@
 # Customer-owned runs and explicit report sharing
 
-Breakroom adapters execute on your machine or your CI worker as trusted Python code. A subprocess is not a security sandbox. Model/network use remains an explicit local choice; the team service receives report data and never executes your adapter. Running, comparing, exporting or preparing a report does not upload it.
+Breakroom adapters execute on your machine or your CI worker as trusted Python code. A subprocess is not a security sandbox. Model/network use remains an explicit local choice; this report-upload flow receives report data and never executes your adapter. Separately, the optional [agent sandbox](sandbox.md) accepts explicit agent deployments into a dedicated isolated worker. Running, comparing, exporting or preparing a report does not upload it.
 
 ## Prepare locally, review, then send
 

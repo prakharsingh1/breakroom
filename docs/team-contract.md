@@ -1,6 +1,6 @@
 # Hosted team API contract
 
-Implementation contract for M5. A separate FastAPI service runs on port 8001 under `/api/team`; the website proxies these routes. The fixed demo API remains separate. Reports are customer-generated evidence, not independently certified executions. Uploading never executes code or follows URLs.
+Implementation contract for M5. A separate FastAPI service runs on port 8001 under `/api/team`; the website proxies these routes. The fixed demo API remains separate. Reports are customer-generated evidence, not independently certified executions. Report uploading never executes code or follows URLs. The separately configured [sandbox control plane](sandbox.md) handles explicit source deployments, pinned GitHub imports and isolated queued execution.
 
 All IDs are opaque strings. Times are UTC ISO 8601 strings. Lists return `{ "items": [...] }`. Errors use an HTTP status and `{ "detail": "message" }`; input validation may return a safe list of error types/messages without submitted values or field names. Cookie-authenticated writes require the `X-CSRF-Token` returned by `GET /api/team/me` and a same-origin browser request. Project-scoped bearer API keys require no cookie/CSRF token and retain their creator's current membership restrictions.
 

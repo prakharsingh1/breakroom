@@ -8,7 +8,7 @@ from typing import Any, Callable, Protocol
 
 SCHEMA_VERSION = "1.0"
 ENGINE_VERSION = "0.2.0"
-ORACLE_VERSION = "1.1"
+ORACLE_VERSION = "1.2"
 
 
 class ToolError(Exception):

@@ -11,3 +11,9 @@ Optional billing uses only test credentials, SDK-verified webhook signatures, du
 Read [operations and recovery](docs/operations.md) before retaining customer data. Backups are sensitive and can restore deleted records or revoked access unless an operator replays the documented deletion/access ledger and invalidates restored credentials. No external backup storage or automatic backup schedule is configured.
 
 The owner has not configured a security contact or disclosure channel. Do not send secrets or real customer information through public issues. Before public release, the owner must choose a private reporting mechanism. No response-time promise or certification is implied.
+
+## Authenticated customer sandbox extension
+
+The optional sandbox accepts bounded Python ZIPs or pinned GitHub commits in private projects. The API validates/encrypts source as data; a dedicated gVisor worker executes it. No guest receives the evaluator, authoritative database, stored model keys, host mounts or a Docker socket. Anonymous demo inputs remain fixed built-ins. See [sandbox boundaries, limits and recovery](docs/sandbox.md). Trusted runc development mode is prohibited in production. Production operators must supervise/restart workers, monitor/reap expired guest containers, restrict broker/API egress, protect/backup the vault key and use a dedicated worker host/daemon. An installation must validate those controls before admitting untrusted customer code.
+
+The code and tests do not certify isolation or universal agent safety. Compromised trusted workers/daemons, host kernel/runtime vulnerabilities, operator misconfiguration and provider behavior remain outside the guest application's guarantees. Model prompts are explicitly sent to selected providers; provider calls already in flight can be billed after cancellation. Source uploads are explicit, encrypted and private but are not automatically scanned for embedded secrets.

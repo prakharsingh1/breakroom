@@ -10,6 +10,8 @@ Breakroom is a customer workspace for testing support agents: email/password acc
 
 [Source repository](https://github.com/prakharsingh1/breakroom) · [Account setup](docs/accounts.md) · [Workspace guide](docs/workspaces.md) · [Self-hosting](docs/self-hosting.md) · [Validation record](STATUS.md)
 
+Customer agent sandbox: authenticated ZIP/GitHub deployments, 24 Fire Drills, up to 72 trials, optional capped OpenAI/Anthropic calls with encrypted customer keys, cancellation and independently evaluated evidence. See [sandbox setup and adapter contract](docs/sandbox.md). Production execution requires a separately configured Linux gVisor worker; public application hosting is not provisioned.
+
 ## Start your workspace
 
 ```sh

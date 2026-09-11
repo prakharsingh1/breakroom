@@ -24,3 +24,5 @@ dist/
 *.pem
 *.key
 !.env.production.example
+
+output/playwright/sandbox-run.json

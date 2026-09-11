@@ -30,3 +30,17 @@ Record tested pinned runtime/dependency versions and official API references. Ru
 ## Customer product upgrade (2026-09-10)
 
 Owner requested email/password accounts, a richer customer workspace and public GitHub source at prakharsingh1. Implement durable accounts with verification/recovery, guided first-project onboarding, actual report summaries and recommendations, visual suite creation and email-bound invitation links. Preserve local-only agent execution and explicit minimized uploads. Verify backend, real browser journeys, responsive screenshots and backup restoration before publishing the reviewed source. External hosting and SMTP remain owner configuration; public GitHub publication is explicitly authorized.
+
+
+## Hosted agent sandboxes (owner-directed extension, 2026-09-11)
+
+The user explicitly requests customer-agent deployment and stress testing, choosing both ZIP uploads and GitHub repositories, plus approved model providers with customer-supplied keys. This extends the original local-only customer-execution scope. The anonymous demo remains an allowlist of built-ins. Hosted execution belongs to a separate authenticated worker boundary; the web/API process never imports customer code.
+
+1. Repair and pass the initial remote customer-browser gate, preserving the existing account/report product.
+2. Add bounded Python source packages and pinned GitHub imports; encrypted tenant-scoped source/key records; explicit resource/model-call budgets; durable jobs, cancellation, expiry and reports.
+3. Keep authoritative simulator state and evaluation outside the guest. Bridge only supported fake tools and bounded model calls over a validated protocol; expose neither provider keys nor database/host access to uploaded agents.
+4. Use a dedicated container worker with gVisor for untrusted production workloads. Standard Docker is an explicit development-only mode for trusted test fixtures. Reject production execution if the required isolation is unavailable.
+5. Build project UI for deployment, credentials, test selection, run progress, cancellation and failure evidence. Include adaptable starters and clear integration/runtime limits.
+6. Verify malformed packages/RPC, import redirects, secrets, tenant controls, cancellation/quotas, independent verdicts, real container runs, browser acceptance and remote CI.
+
+External hosting, dedicated execution-host provisioning and actual provider credentials remain unconfigured. Do not claim external deployment, live model execution or universal safety from local/offline tests.

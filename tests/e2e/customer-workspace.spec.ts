@@ -111,8 +111,10 @@ test('customer workspace guides setup, derives real suite checks, filters report
     expect(new URL(url).pathname).toBe('/invite');
     expect(new URL(url).search).toBe('');
     expect(new URL(url).hash).toMatch(/^#token=.+/);
+    await page.context().grantPermissions(['clipboard-read', 'clipboard-write'], { origin: 'http://127.0.0.1:3000' });
     await page.getByRole('button', { name: 'Copy invitation link', exact: true }).click();
     await expect(page.getByRole('status').filter({ hasText: 'Invitation link copied.' })).toBeVisible();
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(url);
     const invitedPage = await teammate.newPage();
     await invitedPage.goto(url);
     await invitedPage.getByText('Developer test sign-in', { exact: true }).click();

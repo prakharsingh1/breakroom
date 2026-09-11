@@ -16,7 +16,7 @@ PYTHONPATH="$PWD/packages/breakroom-core/src" BREAKROOM_TEST_PYTHON="$PWD/venv-t
 docker compose -f infra/compose.yaml -f infra/compose.team.yaml up -d --no-deps --wait team-api
 ```
 
-Install the matching Chromium with `cd apps/web && npx playwright install chromium` if it is absent. On the verified Mac, `BREAKROOM_BROWSER_EXECUTABLE` selects an already installed Chromium 151 because downloading the matching Chromium 153 timed out; the exact override is in [DELIVERY.md](../DELIVERY.md). The [CI workflow](../.github/workflows/ci.yml) installs the matching browser and runs the public and customer journeys. Its remote execution is pending because GitHub source transfer is blocked by connection errors; local results above do not establish a remote CI result.
+Install the matching Chromium with `cd apps/web && npx playwright install chromium` if it is absent. On the verified Mac, `BREAKROOM_BROWSER_EXECUTABLE` selects an already installed Chromium 151 because downloading the matching Chromium 153 timed out; the exact override is in [DELIVERY.md](../DELIVERY.md). The [CI workflow](../.github/workflows/ci.yml) installs the matching browser and runs the public and customer journeys. It also runs in [GitHub Actions](https://github.com/prakharsingh1/breakroom/actions); the local results above are recorded separately from remote run results.
 
 Each scan writes bounded results to `artifacts/accessibility/`. `needs_manual_review` is retained, not counted as a pass. Remaining contrast-review entries identify decorative arrows and empty-state glyphs; their meaning is also stated in readable text and verdict labels. These glyphs were reviewed in the screenshots and source. The final executed counts and exit codes are recorded in `STATUS.md`.
 

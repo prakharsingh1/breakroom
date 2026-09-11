@@ -188,7 +188,7 @@ npx playwright install chromium
 BREAKROOM_TEST_PYTHON="$PWD/../../venv/bin/python" npm run test:e2e
 ```
 
-Pinned dependencies live in `packages/breakroom-core/pyproject.toml`, `apps/api/requirements.lock`, `apps/api/requirements-billing.lock`, and `apps/web/package-lock.json`. The prepared [CI workflow](.github/workflows/ci.yml) covers core/contracts, mutation coverage, API, team, billing, backup/restore, type checking, the production build and browser journeys. It has not run remotely. Use the [complete validation commands](DELIVERY.md#verification-commands) for all local suites; actual counts, screenshots and limitations belong in [STATUS.md](STATUS.md).
+Pinned dependencies live in `packages/breakroom-core/pyproject.toml`, `apps/api/requirements.lock`, `apps/api/requirements-billing.lock`, and `apps/web/package-lock.json`. The [CI workflow](.github/workflows/ci.yml) covers core/contracts, mutation coverage, API, team, billing, backup/restore, type checking, the production build and browser journeys. Remote results are available in [GitHub Actions](https://github.com/prakharsingh1/breakroom/actions). Use the [complete validation commands](DELIVERY.md#verification-commands) for all local suites; actual counts, screenshots and limitations belong in [STATUS.md](STATUS.md).
 
 ## Repository map and limits
 

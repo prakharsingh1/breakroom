@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "entrypoint": "agent:corrected",
+  "capabilities": [
+    "payments",
+    "tickets",
+    "reconciliation",
+    "virtual_clock",
+    "events"
+  ]
+}

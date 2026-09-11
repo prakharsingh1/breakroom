@@ -119,3 +119,30 @@ class Boundaries(unittest.TestCase):
         with self.assertRaises(ModelError):
             generate('openai','model','fixture','hi',64,timeout_seconds=.02,transport=httpx.MockTransport(delayed))
         self.assertLess(time.monotonic()-start,.5)
+
+    def test_worker_cleanup_scope_survives_database_password_rotation(self):
+        from dataclasses import replace
+        from types import SimpleNamespace
+        from breakroom_api.team_config import TeamSettings
+        from breakroom_api.sandbox.worker import Worker
+        key=base64.b64encode(os.urandom(32)).decode()
+        sandbox=SandboxSettings(enabled=True,vault_key=key)
+        first=TeamSettings(public_origin='https://sandbox.example.invalid')
+        changed=replace(first,database_url='postgresql+psycopg://worker:rotated@private-db/service')
+        a=Worker(SimpleNamespace(settings=first),sandbox)
+        b=Worker(SimpleNamespace(settings=changed),sandbox)
+        c=Worker(SimpleNamespace(settings=replace(first,database_schema='other')),sandbox)
+        self.assertEqual(a.scope,b.scope)
+        self.assertNotEqual(a.scope,c.scope)
+
+    def test_orphan_reaper_only_removes_expired_owned_container_names(self):
+        from unittest.mock import patch
+        from breakroom_api.sandbox.runtime import reap_expired
+        expired='breakroom-agent-'+'a'*32
+        fresh='breakroom-agent-'+'b'*32
+        listing=f'{expired} {int(time.time())-1}\n{fresh} {int(time.time())+60}\nunrelated 1000000000\n'
+        with patch('breakroom_api.sandbox.runtime.command',side_effect=[listing,'']) as command:
+            reap_expired('fixture-scope')
+            self.assertIn('label=breakroom.scope=fixture-scope',command.call_args_list[0].args[0])
+            self.assertEqual(command.call_args_list[1].args[0],['rm','-f',expired])
+            self.assertEqual(command.call_count,2)

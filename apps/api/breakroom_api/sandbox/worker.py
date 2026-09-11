@@ -43,7 +43,7 @@ class Worker:
         self.store, self.settings = store, settings
         self.vault = Vault(settings.vault_key)
         self.id = opaque_id()
-        self.scope = hashlib.sha256((store.settings.database_url + ':' + store.settings.database_schema).encode()).hexdigest()[:32]
+        self.scope = hashlib.sha256((store.settings.public_origin + ':' + store.settings.database_schema).encode()).hexdigest()[:32]
         self.last_reap = time.monotonic()
         self.image_id = None
         self.runtime_factory = runtime_factory

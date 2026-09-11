@@ -54,7 +54,7 @@ The trusted worker validates and dispatches bounded RPC calls in the original si
 
 Limits: two queued/running jobs per project, 20 retained jobs, 10 deployments, 72 trials per job, 60 seconds per trial and 15 minutes per job. Queue waits expire after 15 minutes. Row locks make claims and model budget reservations atomic; request idempotency prevents duplicate submissions. Heartbeat loss marks interrupted jobs incomplete without replaying possibly billed model requests. A known FAIL survives interruption. Jobs follow project report retention, including shortening it; project deletion cascades through source, keys, runs and evidence. Deleting a deployment deletes its terminal runs. Source and provider keys remain until explicitly deleted or the project is deleted. Backups require a separate retention/deletion policy.
 
-The worker must run under a restarting process supervisor. It labels containers with a hard expiry and reaps only expired Breakroom containers in its own installation scope. If the worker is killed, its restarted process cleans orphaned containers. Do not operate an unsupervised production worker. A stopped host/runtime requires operator recovery; no UI claim substitutes for availability monitoring.
+The worker must run under a restarting process supervisor. It labels containers with a hard expiry and reaps only expired Breakroom containers in its own installation scope (public origin plus database schema, stable across password rotation). Drain old workers before changing that scope. If the worker is killed, its restarted process cleans orphaned containers. Do not operate an unsupervised production worker. A stopped host/runtime requires operator recovery; no UI claim substitutes for availability monitoring.
 
 ## Operator setup
 
